@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#  ▀█▀ █▀▄▀█ █░█ ▀▄▀   █▀▀ █▀▄
+#  ░█░ █░▀░█ █▄█ █░█   █▄▄ █▄▀
+# ----------------------------
+# Changes the directory of all panes in the current tmux window.
+
+# Usage:
+#    tcd .
+#    tcd /path/goes/here
+
+arg1=$1
+
+if [[ "$arg1" == "." ]] ; then
+  target=$(pwd)
+  for _pane in $(tmux list-panes -F '#P'); do
+    tmux send-keys -t ${_pane} "clear ; cd $target" Enter
+  done
+else
+  for _pane in $(tmux list-panes -F '#P'); do
+    tmux send-keys -t ${_pane} "clear ; cd $1" Enter
+  done
+fi

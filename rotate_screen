@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# █▀█ █▀█ ▀█▀ ▄▀█ ▀█▀ █▀▀    █▀ █▀▀ █▀█ █▀▀ █▀▀ █▄░█
+# █▀▄ █▄█ ░█░ █▀█ ░█░ ██▄    ▄█ █▄▄ █▀▄ ██▄ ██▄ █░▀█
+# --------------------------------------------------
+# rotates screen AND rotates all mouses/touchscreens 
+# along with it
+# because why the fuck isn't this the default behavior
+
+# Input options: inverted normal left right
+direction=$1
+
+# Get mouse ids from xinput command
+declare -a mouse_ids
+declare -a xinput_lines
+xinput_out=$(xinput)
+
+# Delimit output on newlines
+set -o noglob
+IFS=$'\n' xinput_lines=($xinput_out)
+set +o noglob
+
+# Look for type (pointer/keyboard)
+# Then extract id
+for line in ${xinput_lines[@]}; do
+  if [[ "$line" =~ .*"pointer".* ]]; then
+    id=$(echo $line | grep -oP '.*id=\K.*?(?=\s)')
+    mouse_ids+=($(echo $id))
+  fi
+done
+
+xrandr -o $direction
+
+# Change coord tx matrix based on given screen rotation
+for mouse_id in "${mouse_ids[@]}"; do
+  echo $mouse_id
+  if [[ "$direction" == "inverted" ]]; then 
+    xinput set-prop $mouse_id "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1
+  elif [[ "$direction" == "normal" ]]; then 
+    xinput set-prop $mouse_id "Coordinate Transformation Matrix" 1 0 0 0 1 0 0 0 1
+  elif [[ "$direction" == "left" ]]; then 
+    xinput set-prop $mouse_id "Coordinate Transformation Matrix" 0 -1 1 1 0 0 0 0 1
+  elif [[ "$direction" == "right" ]]; then 
+    xinput set-prop $mouse_id "Coordinate Transformation Matrix" 0 1 0 -1 0 1 0 0 1
+  fi
+done
